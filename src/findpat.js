@@ -1,8 +1,8 @@
 /*
-  Ported to JavaScript by Lazar Laszlo 2011 
-  
+  Ported to JavaScript by Lazar Laszlo 2011
+
   lazarsoft@gmail.com, www.lazarsoft.info
-  
+
 */
 
 /*
@@ -33,14 +33,14 @@ var CENTER_QUORUM = 2;
 
 qrcode.orderBestPatterns = function(patterns)
     {
-      
+
       function distance( pattern1,  pattern2)
       {
-        xDiff = pattern1.X - pattern2.X;
-        yDiff = pattern1.Y - pattern2.Y;
+        var xDiff = pattern1.X - pattern2.X;
+        var yDiff = pattern1.Y - pattern2.Y;
         return  Math.sqrt( (xDiff * xDiff + yDiff * yDiff));
       }
-      
+
       /// <summary> Returns the z component of the cross product between vectors BC and BA.</summary>
       function crossProductZ( pointA,  pointB,  pointC)
       {
@@ -49,12 +49,12 @@ qrcode.orderBestPatterns = function(patterns)
         return ((pointC.x - bX) * (pointA.y - bY)) - ((pointC.y - bY) * (pointA.x - bX));
       }
 
-      
+
       // Find distances between pattern centers
       var zeroOneDistance = distance(patterns[0], patterns[1]);
       var oneTwoDistance = distance(patterns[1], patterns[2]);
       var zeroTwoDistance = distance(patterns[0], patterns[2]);
-      
+
       var pointA, pointB, pointC;
       // Assume one closest to other two is B; A and C will just be guesses at first
       if (oneTwoDistance >= zeroOneDistance && oneTwoDistance >= zeroTwoDistance)
@@ -75,7 +75,7 @@ qrcode.orderBestPatterns = function(patterns)
         pointA = patterns[0];
         pointC = patterns[1];
       }
-      
+
       // Use cross product to figure out whether A and C are correct or flipped.
       // This asks whether BC x BA has a positive z component, which is the arrangement
       // we want for A, B, C. If it's negative, then we've got it flipped around and
@@ -86,7 +86,7 @@ qrcode.orderBestPatterns = function(patterns)
         pointA = pointC;
         pointC = temp;
       }
-      
+
       patterns[0] = pointA;
       patterns[1] = pointB;
       patterns[2] = pointC;
@@ -99,11 +99,11 @@ function FinderPattern(posX, posY,  estimatedModuleSize)
   this.y=posY;
   this.count = 1;
   this.estimatedModuleSize = estimatedModuleSize;
-  
+
   this.__defineGetter__("EstimatedModuleSize", function()
   {
     return this.estimatedModuleSize;
-  }); 
+  });
   this.__defineGetter__("Count", function()
   {
     return this.count;
@@ -129,7 +129,7 @@ function FinderPattern(posX, posY,  estimatedModuleSize)
       }
       return false;
     }
-  
+
 }
 
 function FinderPatternInfo(patternCenters)
@@ -140,15 +140,15 @@ function FinderPatternInfo(patternCenters)
   this.__defineGetter__("BottomLeft", function()
   {
     return this.bottomLeft;
-  }); 
+  });
   this.__defineGetter__("TopLeft", function()
   {
     return this.topLeft;
-  }); 
+  });
   this.__defineGetter__("TopRight", function()
   {
     return this.topRight;
-  }); 
+  });
 }
 
 function FinderPatternFinder()
@@ -158,7 +158,7 @@ function FinderPatternFinder()
   this.hasSkipped = false;
   this.crossCheckStateCount = new Array(0,0,0,0,0);
   this.resultPointCallback = null;
-  
+
   this.__defineGetter__("CrossCheckStateCount", function()
   {
     this.crossCheckStateCount[0] = 0;
@@ -167,8 +167,8 @@ function FinderPatternFinder()
     this.crossCheckStateCount[3] = 0;
     this.crossCheckStateCount[4] = 0;
     return this.crossCheckStateCount;
-  }); 
-  
+  });
+
   this.foundPatternCross=function( stateCount)
     {
       var totalModuleSize = 0;
@@ -197,10 +197,10 @@ function FinderPatternFinder()
   this.crossCheckVertical=function( startI,  centerJ,  maxCount,  originalStateCountTotal)
     {
       var image = this.image;
-      
+
       var maxI = qrcode.height;
       var stateCount = this.CrossCheckStateCount;
-      
+
       // Start counting up from center
       var i = startI;
       while (i >= 0 && image[centerJ + i*qrcode.width])
@@ -231,7 +231,7 @@ function FinderPatternFinder()
       {
         return NaN;
       }
-      
+
       // Now also count down from center
       i = startI + 1;
       while (i < maxI && image[centerJ +i*qrcode.width])
@@ -261,7 +261,7 @@ function FinderPatternFinder()
       {
         return NaN;
       }
-      
+
       // If we found a finder-pattern-like section, but its size is more than 40% different than
       // the original, assume it's a false positive
       var stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
@@ -269,16 +269,16 @@ function FinderPatternFinder()
       {
         return NaN;
       }
-      
+
       return this.foundPatternCross(stateCount)?this.centerFromEnd(stateCount, i):NaN;
     }
   this.crossCheckHorizontal=function( startJ,  centerI,  maxCount, originalStateCountTotal)
     {
       var image = this.image;
-      
+
       var maxJ = qrcode.width;
       var stateCount = this.CrossCheckStateCount;
-      
+
       var j = startJ;
       while (j >= 0 && image[j+ centerI*qrcode.width])
       {
@@ -307,7 +307,7 @@ function FinderPatternFinder()
       {
         return NaN;
       }
-      
+
       j = startJ + 1;
       while (j < maxJ && image[j+ centerI*qrcode.width])
       {
@@ -336,7 +336,7 @@ function FinderPatternFinder()
       {
         return NaN;
       }
-      
+
       // If we found a finder-pattern-like section, but its size is significantly different than
       // the original, assume it's a false positive
       var stateCountTotal = stateCount[0] + stateCount[1] + stateCount[2] + stateCount[3] + stateCount[4];
@@ -344,7 +344,7 @@ function FinderPatternFinder()
       {
         return NaN;
       }
-      
+
       return this.foundPatternCross(stateCount)?this.centerFromEnd(stateCount, j):NaN;
     }
   this.handlePossibleCenter = function( stateCount,  i,  j)
@@ -386,17 +386,17 @@ function FinderPatternFinder()
       }
       return false;
     }
-    
+
   this.selectBestPatterns = function()
     {
-      
+
       var startSize = this.possibleCenters.length;
       if (startSize < 3)
       {
         // Couldn't find enough finder patterns
         throw new Error("Couldn't find enough finder patterns");
       }
-      
+
       // Filter outlier possibilities whose module size is too different
       if (startSize > 3)
       {
@@ -417,17 +417,17 @@ function FinderPatternFinder()
           }
         }
       }
-      
+
       if (this.possibleCenters.Count > 3)
       {
         // Throw away all but those first size candidate points we found.
         //Collections.insertionSort(possibleCenters, new CenterComparator());
         //SupportClass.SetCapacity(possibleCenters, 3);
       }
-      
+
       return new Array( this.possibleCenters[0],  this.possibleCenters[1],  this.possibleCenters[2]);
     }
-    
+
   this.findRowSkip=function()
     {
       var max = this.possibleCenters.length;
@@ -459,7 +459,7 @@ function FinderPatternFinder()
       }
       return 0;
     }
-  
+
   this.haveMultiplyConfirmedCenters=function()
     {
       var confirmedCount = 0;
@@ -491,23 +491,23 @@ function FinderPatternFinder()
       }
       return totalDeviation <= 0.05 * totalModuleSize;
     }
-    
+
   this.findFinderPattern = function(image){
     var tryHarder = false;
     this.image = image;
     var maxI = qrcode.height;
     var maxJ = qrcode.width;
-    
+
     var iSkip = Math.floor((3 * maxI) / (4 * MAX_MODULES));
     if (iSkip < MIN_SKIP || tryHarder)
     {
         iSkip = MIN_SKIP;
     }
-    
+
     var done = false;
-    
+
     var stateCount = new Array(5);
-    
+
     for (var i = iSkip - 1; i < maxI && !done; i += iSkip){
       // Get a row of black/white values
       stateCount[0] = 0;
@@ -559,7 +559,7 @@ function FinderPatternFinder()
                       // and top of presumed third confirmed center
                       // but back up a bit to get a full chance of detecting
                       // it, entire width of center of finder pattern
-                      
+
                       // Skip by rowSkip, but back off by stateCount[2] (size of last center
                       // of pattern we saw) to be conservative, and also back off by iSkip which
                       // is about to be re-added
@@ -571,7 +571,7 @@ function FinderPatternFinder()
                 else
                 {
                   // Advance to next black pixel
-                  do 
+                  do
                   {
                     j++;
                   }
@@ -623,10 +623,10 @@ function FinderPatternFinder()
         }
       }
     }
-    
+
     var patternInfo = this.selectBestPatterns();
     qrcode.orderBestPatterns(patternInfo);
-    
+
     return new FinderPatternInfo(patternInfo);
   };
 }

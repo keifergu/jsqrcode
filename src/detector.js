@@ -1,8 +1,8 @@
 /*
-  Ported to JavaScript by Lazar Laszlo 2011 
-  
+  Ported to JavaScript by Lazar Laszlo 2011
+
   lazarsoft@gmail.com, www.lazarsoft.info
-  
+
 */
 
 /*
@@ -40,7 +40,7 @@ function Detector(image)
 {
   this.image=image;
   this.resultPointCallback = null;
-  
+
   this.sizeOfBlackWhiteBlackRun=function( fromX,  fromY,  toX,  toY)
     {
       // Mild variant of Bresenham's algorithm;
@@ -55,7 +55,7 @@ function Detector(image)
         toX = toY;
         toY = temp;
       }
-      
+
       var dx = Math.abs(toX - fromX);
       var dy = Math.abs(toY - fromY);
       var error = - dx >> 1;
@@ -64,7 +64,7 @@ function Detector(image)
       var state = 0; // In black pixels, looking for white, first or second time
       for (var x = fromX, y = fromY; x != toX; x += xstep)
       {
-        
+
         var realX = steep?y:x;
         var realY = steep?x:y;
         if (state == 1)
@@ -82,7 +82,7 @@ function Detector(image)
             state++;
           }
         }
-        
+
         if (state == 3)
         {
           // Found black, white, black, and stumbled back onto white; done
@@ -106,12 +106,12 @@ function Detector(image)
       return  Math.sqrt( (diffX2 * diffX2 + diffY2 * diffY2));
     }
 
-  
+
   this.sizeOfBlackWhiteBlackRunBothWays=function( fromX,  fromY,  toX,  toY)
     {
-      
+
       var result = this.sizeOfBlackWhiteBlackRun(fromX, fromY, toX, toY);
-      
+
       // Now count other way -- don't run off image though of course
       var scale = 1.0;
       var otherToX = fromX - (toX - fromX);
@@ -126,7 +126,7 @@ function Detector(image)
         otherToX = qrcode.width - 1;
       }
       var otherToY = Math.floor (fromY - (toY - fromY) * scale);
-      
+
       scale = 1.0;
       if (otherToY < 0)
       {
@@ -139,13 +139,13 @@ function Detector(image)
         otherToY = qrcode.height - 1;
       }
       otherToX = Math.floor (fromX + (otherToX - fromX) * scale);
-      
+
       result += this.sizeOfBlackWhiteBlackRun(fromX, fromY, otherToX, otherToY);
       return result - 1.0; // -1 because we counted the middle pixel twice
     }
-    
 
-  
+
+
   this.calculateModuleSizeOneWay=function( pattern,  otherPattern)
     {
       var moduleSizeEst1 = this.sizeOfBlackWhiteBlackRunBothWays(Math.floor( pattern.X), Math.floor( pattern.Y), Math.floor( otherPattern.X), Math.floor(otherPattern.Y));
@@ -163,7 +163,7 @@ function Detector(image)
       return (moduleSizeEst1 + moduleSizeEst2) / 14.0;
     }
 
-  
+
   this.calculateModuleSize=function( topLeft,  topRight,  bottomLeft)
     {
       // Take the average
@@ -172,30 +172,30 @@ function Detector(image)
 
   this.distance=function( pattern1,  pattern2)
   {
-    xDiff = pattern1.X - pattern2.X;
-    yDiff = pattern1.Y - pattern2.Y;
+    var xDiff = pattern1.X - pattern2.X;
+    var yDiff = pattern1.Y - pattern2.Y;
     return  Math.sqrt( (xDiff * xDiff + yDiff * yDiff));
   }
   this.computeDimension=function( topLeft,  topRight,  bottomLeft,  moduleSize)
     {
-      
+
       var tltrCentersDimension = Math.round(this.distance(topLeft, topRight) / moduleSize);
       var tlblCentersDimension = Math.round(this.distance(topLeft, bottomLeft) / moduleSize);
       var dimension = ((tltrCentersDimension + tlblCentersDimension) >> 1) + 7;
       switch (dimension & 0x03)
       {
-        
+
         // mod 4
-        case 0: 
+        case 0:
           dimension++;
           break;
           // 1? do nothing
-        
-        case 2: 
+
+        case 2:
           dimension--;
           break;
-        
-        case 3: 
+
+        case 3:
           throw "Error";
         }
       return dimension;
@@ -212,14 +212,14 @@ function Detector(image)
       {
         throw "Error";
       }
-      
+
       var alignmentAreaTopY = Math.max(0, estAlignmentY - allowance);
       var alignmentAreaBottomY = Math.min(qrcode.height - 1, estAlignmentY + allowance);
-      
+
       var alignmentFinder = new AlignmentPatternFinder(this.image, alignmentAreaLeftX, alignmentAreaTopY, alignmentAreaRightX - alignmentAreaLeftX, alignmentAreaBottomY - alignmentAreaTopY, overallEstModuleSize, this.resultPointCallback);
       return alignmentFinder.find();
     }
-    
+
   this.createTransform=function( topLeft,  topRight,  bottomLeft, alignmentPattern, dimension)
     {
       var dimMinusThree =  dimension - 3.5;
@@ -240,26 +240,26 @@ function Detector(image)
         bottomRightY = (topRight.Y - topLeft.Y) + bottomLeft.Y;
         sourceBottomRightX = sourceBottomRightY = dimMinusThree;
       }
-      
+
       var transform = PerspectiveTransform.quadrilateralToQuadrilateral(3.5, 3.5, dimMinusThree, 3.5, sourceBottomRightX, sourceBottomRightY, 3.5, dimMinusThree, topLeft.X, topLeft.Y, topRight.X, topRight.Y, bottomRightX, bottomRightY, bottomLeft.X, bottomLeft.Y);
-      
+
       return transform;
-    }    
-  
+    }
+
   this.sampleGrid = function( image,  transform,  dimension)
     {
-      
+
       var sampler = grid;
       return sampler.sampleGrid3(image, dimension, transform);
     }
-  
+
   this.processFinderPatternInfo = function( info)
     {
-      
+
       var topLeft = info.TopLeft;
       var topRight = info.TopRight;
       var bottomLeft = info.BottomLeft;
-      
+
       var moduleSize = this.calculateModuleSize(topLeft, topRight, bottomLeft);
       if (moduleSize < 1.0)
       {
@@ -268,22 +268,22 @@ function Detector(image)
       var dimension = this.computeDimension(topLeft, topRight, bottomLeft, moduleSize);
       var provisionalVersion = Version.getProvisionalVersionForDimension(dimension);
       var modulesBetweenFPCenters = provisionalVersion.DimensionForVersion - 7;
-      
+
       var alignmentPattern = null;
       // Anything above version 1 has an alignment pattern
       if (provisionalVersion.AlignmentPatternCenters.length > 0)
       {
-        
+
         // Guess where a "bottom right" finder pattern would have been
         var bottomRightX = topRight.X - topLeft.X + bottomLeft.X;
         var bottomRightY = topRight.Y - topLeft.Y + bottomLeft.Y;
-        
+
         // Estimate that alignment pattern is closer by 3 modules
         // from "bottom right" to known top left location
         var correctionToTopLeft = 1.0 - 3.0 /  modulesBetweenFPCenters;
         var estAlignmentX = Math.floor (topLeft.X + correctionToTopLeft * (bottomRightX - topLeft.X));
         var estAlignmentY = Math.floor (topLeft.Y + correctionToTopLeft * (bottomRightY - topLeft.Y));
-        
+
         // Kind of arbitrary -- expand search radius before giving up
         for (var i = 4; i <= 16; i <<= 1)
         {
@@ -299,11 +299,11 @@ function Detector(image)
         }
         // If we didn't find alignment pattern... well try anyway without it
       }
-      
+
       var transform = this.createTransform(topLeft, topRight, bottomLeft, alignmentPattern, dimension);
-      
+
       var bits = this.sampleGrid(this.image, transform, dimension);
-      
+
       var points;
       if (alignmentPattern == null)
       {
@@ -315,7 +315,7 @@ function Detector(image)
       }
       return new DetectorResult(bits, points);
     }
-  
+
   this.detect = function() {
     var info =  new FinderPatternFinder().findFinderPattern(this.image);
     return this.processFinderPatternInfo(info);
